@@ -1,20 +1,31 @@
 import React from "react";
-import { View, Text, TextInput } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Linking } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { StyleSheet } from "react-native";
 
-const Header = () => {
+const Header = ({ onSearch }: { onSearch: (query: string) => void }) => {
+  const handleSearch = (text: string) => {
+    onSearch(text); // Mengirimkan query pencarian ke komponen utama
+  };
+
+  const openWebsite = () => {
+    Linking.openURL("https://www.example.com"); // Gantilah URL ini dengan URL website yang diinginkan
+  };
+
   return (
     <View style={styles.header}>
       <View style={styles.description}>
         <Text style={styles.title}>FateScheduler</Text>
-        <FontAwesome name="toggle-on" size={48} color="white" />
+        <TouchableOpacity style={styles.websiteButton} onPress={openWebsite}>
+          <Text style={styles.websiteButtonText}>🌐</Text>
+        </TouchableOpacity>
       </View>
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
           placeholder="Search your decision"
           placeholderTextColor="#fff"
+          onChangeText={handleSearch} // Mengupdate state pencarian di komponen utama
         />
         <FontAwesome
           style={styles.search}
@@ -44,6 +55,18 @@ const styles = StyleSheet.create({
     fontSize: 32,
     color: "#FFF",
     fontFamily: "QuicksandBold",
+  },
+  websiteButton: {
+    width: 50,
+    height: 50,
+    backgroundColor: "#fff",
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  websiteButtonText: {
+    fontSize: 24,
+    color: "#000",
   },
   search: {
     padding: 18,

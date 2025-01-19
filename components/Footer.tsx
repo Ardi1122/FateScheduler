@@ -7,6 +7,8 @@ import {
   Modal,
   StyleSheet,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Ionicons } from "@expo/vector-icons";
 
 interface FooterProps {
@@ -22,32 +24,61 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ onAddData }) => {
   const [isModalVisible, setModalVisible] = useState(false);
+  const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [tag, setTag] = useState("");
   const [question, setQuestion] = useState("");
   const [choices, setChoices] = useState("");
   const [dateTime, setDateTime] = useState("");
   const [color, setColor] = useState("#4A4AFF");
 
-  const handleAdd = () => {
+  const handleConfirm = (date: Date) => {
+    const formattedDate = date.toLocaleString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+    setDateTime(formattedDate);
+    setDatePickerVisible(false);
+  };
+
+  const handleAdd = async () => {
     if (tag && question && choices && dateTime) {
       const choicesArray = choices.split(",").map((choice) => choice.trim());
       const randomChoice =
         choicesArray[Math.floor(Math.random() * choicesArray.length)];
-      onAddData({
+      const newData = {
         id: Date.now().toString(),
         label: tag,
         question,
         answer: randomChoice,
         date: dateTime,
         color,
-      });
+      };
+
+      // Memperbarui AsyncStorage
+      try {
+        const storedData = await AsyncStorage.getItem("dataList");
+        const existingData = storedData ? JSON.parse(storedData) : [];
+        const updatedData = [newData, ...existingData];
+        await AsyncStorage.setItem("dataList", JSON.stringify(updatedData));
+      } catch (error) {
+        console.error("failed to save data to AsyncStorage:", error);
+      }
+
+      // Menambahkan data ke dalam aplikasi
+      onAddData(newData);
+
+      // Reset form dan tutup modal
       setModalVisible(false);
       setTag("");
       setQuestion("");
       setChoices("");
       setDateTime("");
     } else {
-      alert("Mohon isi semua kolom!");
+      alert("Please fill all pools!");
     }
   };
 
@@ -63,7 +94,7 @@ const Footer: React.FC<FooterProps> = ({ onAddData }) => {
       <Modal visible={isModalVisible} transparent animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Tambah Data Baru</Text>
+            <Text style={styles.modalTitle}>Add new data</Text>
             <View style={styles.rowContainer}>
               <TextInput
                 placeholder="Tag"
@@ -84,36 +115,42 @@ const Footer: React.FC<FooterProps> = ({ onAddData }) => {
                 }
               />
             </View>
-              <TextInput
-                placeholder="Pertanyaan"
-                style={styles.input}
-                value={question}
-                onChangeText={setQuestion}
-              />
-              <TextInput
-                placeholder="Keputusan (pisahkan dengan koma)"
-                style={styles.input}
-                value={choices}
-                onChangeText={setChoices}
-              />
-              <TextInput
-                placeholder="Tanggal dan Waktu (contoh: 07:00 PM January 15 2025)"
-                style={styles.input}
-                value={dateTime}
-                onChangeText={setDateTime}
-              />
+            <TextInput
+              placeholder="question"
+              style={styles.input}
+              value={question}
+              onChangeText={setQuestion}
+            />
+            <TextInput
+              placeholder="decisions (separate with commas)"
+              style={styles.input}
+              value={choices}
+              onChangeText={setChoices}
+            />
+            <TouchableOpacity
+              onPress={() => setDatePickerVisible(true)}
+              style={styles.input}
+            >
+              <Text>{dateTime || "select date and time"}</Text>
+            </TouchableOpacity>
+            <DateTimePickerModal
+              isVisible={isDatePickerVisible}
+              mode="datetime"
+              onConfirm={handleConfirm}
+              onCancel={() => setDatePickerVisible(false)}
+            />
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={[styles.button, styles.cancelButton]}
                 onPress={() => setModalVisible(false)}
               >
-                <Text style={styles.buttonCancel}>Batal</Text>
+                <Text style={styles.buttonCancel}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.button, styles.saveButton]}
                 onPress={handleAdd}
               >
-                <Text style={styles.buttonSave}>Selesai</Text>
+                <Text style={styles.buttonSave}>Save</Text>
               </TouchableOpacity>
             </View>
           </View>
