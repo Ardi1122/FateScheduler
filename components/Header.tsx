@@ -9,7 +9,7 @@ const Header = ({ onSearch }: { onSearch: (query: string) => void }) => {
   };
 
   const openWebsite = () => {
-    Linking.openURL("https://www.example.com"); // Gantilah URL ini dengan URL website yang diinginkan
+    Linking.openURL("https://ardi1122.github.io/product-app/"); // Gantilah URL ini dengan URL website yang diinginkan
   };
 
   return (
